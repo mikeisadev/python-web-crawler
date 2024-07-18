@@ -1,10 +1,10 @@
-from useragents import USER_AGENTS, getUserAgent
-from utils import checkUrlStrict, saveWebPage, saveCrawlData, saveHeaders
-from commands import commandInPrompt
-from prompts import prompts
-import requests
+from data.useragents import USER_AGENTS, getUserAgent
+from data.crawldata import crawlData
+from utils.utils import checkUrlStrict, saveWebPage, saveCrawlData, saveHeaders
+from cli.commands import commandInPrompt
+from cli.prompts import prompts
+from utils.cralwer import startCrawler, crawledDirExists, createCrawledDir
 import sys
-from bs4 import BeautifulSoup
 import questionary
 
 # NOTE: Save this inside a function or class (in the future) and call everything inside a non .py file to avoid typing the extension, call the file directy (py crawl) instead of (py crawl.py)
@@ -19,18 +19,6 @@ getSitemap: bool        = False
 userAgent: bool         = USER_AGENTS['moz']['moz5-mac'] # Set a default user agent
 customUserAgent: bool   = False
 saveTheHeaders: bool|str   = False
-
-# Data structures of crawling
-crawlData: dict = {
-    'internal': {
-        'sitemap': [],
-        'hrefs': [],
-        'img': [],
-        'scripts': [],
-        'styles': []
-    },
-    'external': []
-}
 
 # Getting data (if -> prompt, else -> prompt line)
 if (len(args) == 1):
@@ -63,51 +51,23 @@ else:
     save = commandInPrompt(args, 'save')
     saveJson = commandInPrompt(args, 'json')
     getSitemap = commandInPrompt(args, 'sitemap')
-
-# Crawl URL
-# If you remove this, you can get an error like 403 because you can be recognized as bot.
-headers = {
-    'User-Agent': userAgent,
-    'Content-Type': 'text/html'
-}
-
-response = requests.get(url, headers=headers)
-htmlBytes = response.content
-
-# Parse HTML
-parsed = BeautifulSoup(htmlBytes, 'html.parser')
-
-# Find links, scripts, stylesheets
-all_stylesheets = parsed.select('link[rel="stylesheet"][href]')
-all_scripts = parsed.select('script[src]')
-all_hyperlinks = parsed.select('a[href]')
-all_images = parsed.select('img[src]')
-
-for stylesheet in all_stylesheets:
-    crawlData['internal']['styles'].append( stylesheet['href'] )
-
-for script in all_scripts:
-    crawlData['internal']['scripts'].append( script['src'] )
-
-for hyperlink in all_hyperlinks:
-    href = hyperlink['href']
-
-    if url in href:
-        crawlData['internal']['hrefs'].append(href)
-    else:
-        crawlData['external'].append(href)
-
-for image in all_images:
-    crawlData['internal']['img'].append( image['src'] )
+    
+# Start the crawl process
+crawlResponse = startCrawler(
+    url,
+    {
+        'user-agent': userAgent
+    }
+)
 
 # Do what prompt parameters said
 crawlData['headers'] = saveHeaders(
     saveTheHeaders,
-    headers,
-    dict(response.headers)
-)                           if saveTheHeaders   else None
-saveWebPage(htmlBytes)      if save             else None
-saveCrawlData(crawlData)    if saveJson         else None
+    crawlResponse['headers']['request'],
+    crawlResponse['headers']['response']
+)                                               if saveTheHeaders   else None
+saveWebPage(crawlResponse['page']['html'])      if save             else None
+saveCrawlData(crawlData)                        if saveJson         else None
 
 # print(crawlData['internal']['hrefs'])
 

@@ -1,3 +1,4 @@
+from utils.cralwer import createCrawledDir
 import validators
 import json
 
@@ -15,7 +16,9 @@ def saveWebPage(html: bytes, name: str = 'index.html', enc = 'utf-8') -> bool:
     '''
     Save a web page.
     '''
-    f = open(name, "w")
+    path = createCrawledDir()
+
+    f = open(f'{path}\{name}', "w")
     f.write(html.decode())
     f.close()
 
@@ -25,12 +28,14 @@ def saveCrawlData(crawlData: dict, format: str = 'json') -> bool:
     '''
     Save the crawl data from dictionary to preferred format (as json)
     '''
+    path = createCrawledDir()
+
     formats = ('json', 'xml', 'csv')
 
     if format not in formats:
         raise Exception(f'Invalid format! These are valid formats {' '.join(formats)}')
 
-    f = open(f'crawldata.{format}', "w")
+    f = open( f'{path}\crawldata.{format}', "w")
 
     match format:
         case 'json':
