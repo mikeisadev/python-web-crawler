@@ -1,0 +1,4 @@
+__pycache__
+.venv
+crawldata.json
+index.html
