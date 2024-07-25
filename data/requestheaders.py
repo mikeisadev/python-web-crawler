@@ -10,8 +10,12 @@ def getReqHeaders(headers: dict) -> dict:
     '''
     
     return {
-        'User-Agent': headers.get('user-agent'),
-        'Content-Type': 'text/html'
+        'User-Agent'        : headers.get('user-agent'),
+        'Accept'            : '*/*',
+        'Accept-Charset'    : 'utf-8',
+        'Accept-Encoding'   : '*',
+        'Accept-Language'   : '*',
+        'Accept-CH'         : 'Viewport-Width, Width'
     }
 
 __all__ = ['getReqHeaders']

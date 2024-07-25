@@ -2,10 +2,10 @@
 crawlData: dict = {
     'internal': {
         'sitemap': [],
-        'hrefs': [],
-        'img': [],
-        'scripts': [],
-        'styles': []
+        'hrefs': {},
+        'img': {},
+        'scripts': {},
+        'styles': {}
     },
     'external': []
 }

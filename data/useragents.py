@@ -53,6 +53,4 @@ def getUserAgent(userAgent: str, requestAgainOnFail = True, exceptionOnFail = Fa
     
     return agent
 
-print(getUserAgent('safari-604'))
-
 __all__ = ['USER_AGENTS', 'getUserAgent']

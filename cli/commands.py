@@ -1,7 +1,26 @@
 import re
 
 '''
-    List of all types of commands and how them should be represented
+    List of all types of commands and how them should be represented.
+
+    Types of commands you can find here:
+    - save
+    - sitemap
+    - json
+    - user-agent
+    - headers
+
+    Commands I want to build:
+    - save-images
+    - save-css
+    - save-js
+    - save-all
+    - crawl-depth
+    - save-cookies
+    - use-web-browser (instead of using the direct HTTP GET request)
+    - scan-robots-txt
+    - get-json-schemas
+    - get-pixels
 '''
 COMMANDS_RULES = {
     'save': {
@@ -31,7 +50,7 @@ COMMANDS_RULES = {
     }
 }
 
-def commandInPrompt(allArgs: str|tuple, commandType: str) -> bool:
+def commandInPrompt(allArgs: str|tuple, commandType: str, returnCmd: bool = False) -> bool|str:
     '''
     Use this function to check if the prompt (allArgs), given ad tuple, has the specified command type inside it.
     '''
@@ -51,9 +70,11 @@ def commandInPrompt(allArgs: str|tuple, commandType: str) -> bool:
         arg = (arg.split('='))[0] if '=' in arg else arg
 
         # Check arg
-        if arg in commands:
+        if arg in commands and not returnCmd:
             res = True
             break
+        elif returnCmd:
+            res = arg
         else:
             res = False
 
@@ -61,10 +82,10 @@ def commandInPrompt(allArgs: str|tuple, commandType: str) -> bool:
         if commandRules['arg'] and commandRules['arg-required'] and len( arg.split('=') ) != 2:
             raise Exception(f'Missing parameter for the command {arg}')
 
-    print(arg)
+    # print(arg)
     
     return res
 
-print(commandInPrompt('py crawler.py https://michelemincone.com -s -ua=moz5-lf5', 'user-agent'))
+# print(commandInPrompt('py crawler.py https://michelemincone.com -s -ua=moz5-lf5', 'user-agent'))
 
 __all__ = ['COMMAND_RULES', 'commandInPrompt']

@@ -1,11 +1,16 @@
-from utils.cralwer import createCrawledDir
+from utils.cralwer import createCrawledDir, clearCrawledDir
 import validators
 import json
+import codecs
 
 def checkUrlStrict(url) -> str:
     '''
     Check if an URL is valid.
     '''
+    if len(url) == 0:
+        print('Please insert an URL!')
+        return checkUrlStrict( input('Type an URL to crawl: ') )
+    
     if not validators.url(url):
         print('Invalid URL!')
         return checkUrlStrict( input('Type an URL to crawl: ') )
@@ -18,8 +23,10 @@ def saveWebPage(html: bytes, name: str = 'index.html', enc = 'utf-8') -> bool:
     '''
     path = createCrawledDir()
 
-    f = open(f'{path}\{name}', "w")
-    f.write(html.decode())
+    # clearCrawledDir()
+
+    f = open(f'{path}\\{name}', mode='w', encoding='utf8')
+    f.write(codecs.decode(html, encoding='utf-8', errors='backslashreplace'))
     f.close()
 
     return True
@@ -35,7 +42,7 @@ def saveCrawlData(crawlData: dict, format: str = 'json') -> bool:
     if format not in formats:
         raise Exception(f'Invalid format! These are valid formats {' '.join(formats)}')
 
-    f = open( f'{path}\crawldata.{format}', "w")
+    f = open( f'{path}\\crawldata.{format}', "w")
 
     match format:
         case 'json':
@@ -52,14 +59,14 @@ def saveHeaders(arg, reqHeaders, resHeaders) -> dict:
     headers: dict = {}
 
     match(arg):
-        case 'all':
+        case 'all' | '--all-headers':
             headers['request'] = reqHeaders
             headers['response'] = resHeaders
-        case 'request-headers':
+        case 'request-headers' | '--res-headers':
             headers['request'] = reqHeaders
-        case 'response-headers':
+        case 'response-headers' | '--req-headers':
             headers['response'] = resHeaders
 
     return headers
 
-__all__ = ['checkUrlStrict', 'saveHeaders']
+__all__ = ['checkUrlStrict', 'saveHeaders', 'saveWebPage', 'saveCrawlData']

@@ -4,7 +4,7 @@ import re
 protocols: list = ('https://', 'http://', 'ftp://')
 
 regex: dict = {
-    'protocol': r'([a-z]+[://]+)',
+    'protocol': r'([a-z]*(:\/\/))',
     'port'    : r'([:][0-9]+)'
 }
 
@@ -106,10 +106,30 @@ def urlHasQueryStrings(url: str) -> bool:
 def urlHasFragment(url: str) -> bool:
     return True if urlToStructure(url)['fragment'] else False
 
+def urlDelProt(url: str) -> str:
+    return re.sub(regex['protocol'], '', url)
+
+def delLastSlash(url: str) -> str:
+    return url[0:-1] if url[-1] == '/' else url
+
+def getPageSlug(url: str) -> str:
+    urlList = urlToStructure(url)['url']
+    slug = urlList[-1]
+    noProt = delLastSlash( urlDelProt(url) )
+
+    return '/' if slug == noProt else slug
+
+def getPageName(url: str, format: str = 'html') -> str:
+    urlList = urlToStructure(url)['url']
+    slug = urlList[-1]
+    noProt = delLastSlash( urlDelProt(url) )
+
+    return f'index.{format}' if slug == noProt else f'{slug}.{format}'
+
+#print (getPageName('https://michelemincone.com/chi-sono#section-1'))
+            
 # print( urlHasFragment('https://michelemincone.com/chi-sono#section-1') )
 
 # print( urlToStructure('https://michelemincone.com/chi-sono?h=sedd&s=24#section-1') )
 
-print(urlToStructure("https://michelemincone.com/wp-content/plugins/google-analytics-for-wordpress/assets/js/frontend-gtag.min.js?ver=8.28.0"))
-
-__all__ = ['isUrlHttps', 'extractProtocol', 'urlToStructure', 'isIndexUrl', 'urlHasProtocol', 'urlHasPort', 'urlHasQueryStrings', 'urlHasFragment']
+__all__ = ['isUrlHttps', 'extractProtocol', 'urlToStructure', 'isIndexUrl', 'urlHasProtocol', 'urlHasPort', 'urlHasQueryStrings', 'urlHasFragment', 'urlDelProt', 'getPageSlug']
