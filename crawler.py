@@ -1,9 +1,10 @@
-from data.useragents import USER_AGENTS, getUserAgent
-from data.crawldata import crawlData
-from utils.utils import checkUrlStrict
-from cli.commands import commandInPrompt
-from cli.prompts import prompts
-from utils.cralwer import startCrawler
+from data.useragents    import USER_AGENTS, getUserAgent
+from utils.utils        import checkUrlStrict, saveHeaders, saveCrawlData
+from cli.commands       import commandInPrompt
+from cli.prompts        import prompts
+from utils.cralwer      import startCrawler, crawlChildUrls
+from data.crawldata     import crawlData
+from utils.mindmap      import generateSitemapMindMap
 import sys
 import questionary
 
@@ -47,9 +48,7 @@ if (len(args) == 1):
 
             print(f'Perfect! You selected {saveTheHeaders} for header saving process...')
 else:
-    url             = args[1]
-
-    url             = checkUrlStrict(url)
+    url             = checkUrlStrict( args[1] )
 
     save            = commandInPrompt(args, 'save')
     saveTheHeaders  = commandInPrompt(args, 'headers', True)
@@ -57,24 +56,30 @@ else:
     saveSitemap     = commandInPrompt(args, 'sitemap')
     
 # Start the crawl process
-startCrawler(
-    url=url,
-    options={
-        'user-agent': userAgent
-    },
-    cmdOptions={
-        'save': {
-            'headers': saveTheHeaders,
-            'web-page': save,
-            'json': saveJson,
-            'sitemap': saveSitemap
-        }
-    },
-    crawlData=crawlData,
-    scanChildUrls=True,
-    scanningChild=False
+requestOptions: dict = {
+    'user-agent': userAgent
+}
+
+request = startCrawler(
+    url             = url,
+    options         = requestOptions,
+    saveWebPage     = True
 )
 
-print(crawlData)
+# Crawl child URLs
+crawlChildUrls(
+    list(crawlData['internal']['hrefs'][url].keys()),
+    requestOptions,
+    saveWebPage= True
+)
+
+# Save headers.
+crawlData['headers'] = saveHeaders(
+        saveTheHeaders,
+        request['headers']['request'],
+        request['headers']['response']
+)                                                       if saveTheHeaders   else None
+saveCrawlData(crawlData)                                if saveJson         else None
+generateSitemapMindMap(crawlData['internal']['hrefs'])  if saveSitemap      else None
 
 print('Web page crawled successfully!')

@@ -1,29 +1,23 @@
 from data.requestheaders import getReqHeaders
-from utils.url import getPageName
-from bs4 import BeautifulSoup
+from utils.url           import getPageName
+from utils.dict          import updateTree
+from data.crawldata      import crawlData
+from bs4                 import BeautifulSoup
 import requests, os, shutil
 
 '''
 Presave here crawling data.
 '''
-crawlCache: dict    = {}
-urlsTree: dict      = {}
-crawlDepth: int     = 0
 crawledDir: str     = 'crawled'
+urlTree: dict       = {}
 
-def startCrawler(
-    url: str, 
-    options: dict, 
-    cmdOptions: dict, 
-    crawlData: dict,
-    scanChildUrls: bool = False, 
-    scanningChild: bool = False, 
-    ): 
+def startCrawler(url: str, options: dict, saveWebPage: bool = False, scanningChilds: bool = False)-> dict: 
     '''
     The function to start crawling a web page
     '''
-    from utils.utils import saveCrawlData, saveHeaders, saveWebPage
-    from utils.mindmap import generateSitemapMindMap
+    from utils.utils import saveWebPage
+
+    if not crawlData['root']: crawlData['root'] = url
 
     headers = getReqHeaders({
         'user-agent': options.get('user-agent')
@@ -44,7 +38,6 @@ def startCrawler(
     # CSS
     for stylesheet in all_stylesheets:
         crawlData['internal']['styles'][url] = []
-        print(stylesheet['href'])
         crawlData['internal']['styles'][url].append( stylesheet['href'] )
 
     # JS
@@ -52,55 +45,48 @@ def startCrawler(
         crawlData['internal']['scripts'][url] = []
         crawlData['internal']['scripts'][url].append( script['src'] )
 
+
     # Hyperlinks:
-    urlsTree[url] = {}
+    urlTree[url] = {}
 
     for hyperlink in all_hyperlinks:
         href = hyperlink['href']
 
         if url in href:
-            urlsTree[url][href] = ''
+            urlTree[url][href] = ''
         else:
             crawlData['external'].append(href)
+
+    updateTree(crawlData['internal']['hrefs'], url, urlTree[url])
 
     # Images.
     for image in all_images:
         crawlData['internal']['img'][url] = []
         crawlData['internal']['img'][url].append( image['src'] )
 
-    crawlData['internal']['hrefs'] = urlsTree
-
-    # Do what prompt parameters said
-    if not scanningChild:
-        crawlData['headers'] = saveHeaders(
-            cmdOptions['save']['headers'],
-            headers,
-            dict(response.headers)
-        )                                       if cmdOptions['save']['headers']   else None
-        saveCrawlData(crawlData)                if cmdOptions['save']['json']      else None
-        generateSitemapMindMap(urlsTree)        if cmdOptions['save']['sitemap']   else None
-
+    # Save web page
     pageName = getPageName(url)
 
     saveWebPage(
         htmlBytes,
         pageName
-    ) if cmdOptions['save']['web-page']  else None
+    ) if saveWebPage  else None
 
-    print(url)
+    print(f'{url} - {pageName}')
+    
+    # Return crawl data.
+    return {
+        'headers': {
+            'request': headers,
+            'response': dict(response.headers)
+        }
+    }
 
-    # Scan childs urls.
-    if scanChildUrls:
-        childUrls = list(urlsTree[url].keys())
-
-        for childUrl in childUrls:
-            startCrawler(
-                url             = childUrl, 
-                options         = options, 
-                scanningChild   = True,
-                cmdOptions      = cmdOptions,
-                _crawlData      = crawlData
-            )
+def crawlChildUrls(urls: list, options: dict, saveWebPage: bool):
+    '''
+    Crawl sub pages.
+    '''
+    for url in urls: startCrawler(url, options, saveWebPage)
 
 def crawledDirExists(createDirIfNot = False) -> bool:
     '''
@@ -139,4 +125,4 @@ def clearCrawledDir() -> bool:
         except Exception as e:
             print('Error occurred while deleting "%": %' % (path, e))
 
-__all__ = ['startCrawler', 'crawledDirExists', 'createCrawledDir', 'clearCrawledDir']
+__all__ = ['startCrawler', 'crawledDirExists', 'createCrawledDir', 'clearCrawledDir', 'crawlChildUrls']

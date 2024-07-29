@@ -1,5 +1,6 @@
 # Data structures of crawling
 crawlData: dict = {
+    'root': None,
     'internal': {
         'sitemap': [],
         'hrefs': {},
@@ -9,5 +10,9 @@ crawlData: dict = {
     },
     'external': []
 }
+
+
+
+
 
 __all__ = ['crawlData']

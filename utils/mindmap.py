@@ -13,7 +13,7 @@ def generateSitemapMindMap(urls: dict, scanningChilds = False, graph = None, roo
 
     urlKeys = list(urls.keys())
 
-    if len(urlKeys) < 2 and not root:
+    if len(urlKeys) == 1 and not root:
         root = urlKeys[0]
 
     _urls = list( (urls[root]).keys() )
@@ -34,7 +34,12 @@ def generateSitemapMindMap(urls: dict, scanningChilds = False, graph = None, roo
         if type(childs) is dict:
             childsTree: dict = { _url: childs }
 
-            graph = generateSitemapMindMap(urls=childsTree, scanningChilds=True, graph=graph)
+            graph = generateSitemapMindMap(
+                urls=           childsTree, 
+                scanningChilds= True, 
+                graph=          graph,
+                root=           _url
+            )
 
     if scanningChilds:
         return graph
