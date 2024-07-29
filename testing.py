@@ -13,13 +13,21 @@ urls = [
     "https://michelemincone.com/termini-e-condizioni/"
 ]
 
+url = ["https://michelemincone.com/blog/"]
+
 N=7
 
-for url in urls:
-    response = requests.get(url)
+for u in url:
+    response = requests.get(u)
     htmlBytes = response.content
 
     res = ''.join(random.choices(string.ascii_lowercase + string.digits, k=N))
+
+    parsed = BeautifulSoup(htmlBytes, 'html.parser')
+
+    hrefs = parsed.select('a[href]')
+
+    for href in hrefs: print(href)
 
     f = open(f'crawled\\{res}.html', 'w', encoding='utf8')
     f.write(codecs.decode(htmlBytes, encoding='utf-8', errors='ignore'))

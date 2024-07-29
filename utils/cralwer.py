@@ -8,8 +8,9 @@ import requests, os, shutil
 '''
 Presave here crawling data.
 '''
-crawledDir: str     = 'crawled'
-urlTree: dict       = {}
+crawledDir: str         = 'crawled'
+urlTree: dict           = {}
+internalUrlCache: tuple = []
 
 def startCrawler(url: str, options: dict, saveWebPage: bool = False, scanningChilds: bool = False)-> dict: 
     '''
@@ -45,15 +46,22 @@ def startCrawler(url: str, options: dict, saveWebPage: bool = False, scanningChi
         crawlData['internal']['scripts'][url] = []
         crawlData['internal']['scripts'][url].append( script['src'] )
 
-
     # Hyperlinks:
     urlTree[url] = {}
 
     for hyperlink in all_hyperlinks:
         href = hyperlink['href']
 
-        if url in href:
-            urlTree[url][href] = ''
+        if crawlData['root'] in href:
+
+            print(href)
+
+            if (href == crawlData['root']) or (href == f'{crawlData['root']}/') or (href in internalUrlCache) or ('?' in href):
+                continue
+            
+            urlTree[url][href] = '' 
+
+            internalUrlCache.append(href)
         else:
             crawlData['external'].append(href)
 
