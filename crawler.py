@@ -76,8 +76,6 @@ else:
     saveJson        = commandInPrompt(args, 'json')
     saveSitemap     = commandInPrompt(args, 'sitemap')
     saveDupLinks    = commandInPrompt(args, 'duplicate-links')
-
-print(saveDupLinks, saveTheHeaders)
     
 # Start the crawl process
 requestOptions: dict = {

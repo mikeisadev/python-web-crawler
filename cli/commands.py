@@ -88,8 +88,7 @@ def commandInPrompt(allArgs: str|tuple, commandType: str, returnCmd: bool = Fals
         # Check arg parameter
         if commandRules['arg'] and commandRules['arg-required'] and len( arg.split('=') ) != 2:
             raise Exception(f'Missing parameter for the command {arg}')
-    
-    print(res)
+
     return res
 
 commandInPrompt('py crawler.py https://michelemincone.com -s -sm --json -ua=opera-38 --all-headers -sdl', 'headers', True)

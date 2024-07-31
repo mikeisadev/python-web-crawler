@@ -3,7 +3,7 @@ from utils.url              import getPageName, urlToStructure
 from utils.dict             import updateTree
 from data.crawldata         import crawlData
 from bs4                    import BeautifulSoup
-import requests, os, shutil
+import requests, os, shutil, socket
 
 '''
 Presave here crawling data.
@@ -22,14 +22,21 @@ def startCrawler(url: str, options: dict, cmdOptions: dict, scanningChilds: bool
 
     # Clear the crawled folder at first start.
     if not crawlData['in-action']:
+        urlStruct = urlToStructure(url)
+
         if not crawledDirExists():
             createCrawledDir()
 
         hostnameDir = createHostNameDir(url)
 
+        # serverInfo = socket.getaddrinfo(urlStruct['url'][1], urlStruct['port'])
+
+        # Save IPv4
+        crawlData['ip']['v4'] = socket.gethostbyname(urlStruct['url'][1])
+        crawlData['ip']['v6'] = None
+
         clearCrawledDir()
         
-
     # Set the status of the crawler
     if not crawlData['in-action']:
         crawlData['in-action'] = True
@@ -42,7 +49,7 @@ def startCrawler(url: str, options: dict, cmdOptions: dict, scanningChilds: bool
         'user-agent': options.get('user-agent')
     })
 
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, stream=True)
     htmlBytes = response.content
 
     # Parse HTML
@@ -147,7 +154,6 @@ def clearCrawledDir() -> bool:
     '''
     Clean the crawled dir for the current working hostname dir.
     '''
-    print(hostnameDir)
     for file in os.listdir( hostnameDir ) :
         path: str = os.path.join(hostnameDir, file)
 

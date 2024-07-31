@@ -47,20 +47,22 @@ def urlToStructure(url: str) -> dict:
     if isUrlHttps(url):
         urlList['url'].append('https://')
         url = url.replace('https://', '')
+
+        urlList['port'] = 443
     else:
         urlList['url'].append('http://')
         url = url.replace('http://', '')
 
+        urlList['port'] = 80
+
     for _str in url.split('/'):
         urlList['url'].append(_str) if len(_str) > 0 else None
 
-    # Check for port number
+    # Check for port number inside the URL string.
     port = re.search(regex['port'], urlList['url'][1])
 
     if port:
         urlList['port'] = int( port.group(0)[1:] )
-    else:
-        urlList['port'] = 443 if isUrlHttps(url) else 80
 
     # Fragment.
     if '#' in urlList['url'][-1]:
@@ -125,6 +127,16 @@ def getPageName(url: str, format: str = 'html') -> str:
     noProt = delLastSlash( urlDelProt(url) )
 
     return f'index.{format}' if slug == noProt else f'{slug}.{format}'
+
+def getHostnameFromUrl(url: str) -> str:
+    '''
+    From the URL get the hostname + the protocol used before the URL hostname.
+    '''
+    urlList = urlToStructure(url)['url']
+
+    return (urlList[0] + urlList[1])
+
+# print(getHostnameFromUrl('https://michelemincone.com'))
 
 #print (getPageName('https://michelemincone.com/chi-sono#section-1'))
             
