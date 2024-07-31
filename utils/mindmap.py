@@ -9,6 +9,8 @@ def generateSitemapMindMap(urls: dict, scanningChilds = False, graph = None, roo
 
     Pydot will be used to generate the mindmap. Pydot is an interface for pygraphviz
     '''
+    from utils.cralwer import hostnameDir as sdir
+
     graph = pydot.Dot(graph_type='graph', rankdir='TD') if not graph else graph
 
     urlKeys = list(urls.keys())
@@ -44,4 +46,4 @@ def generateSitemapMindMap(urls: dict, scanningChilds = False, graph = None, roo
     if scanningChilds:
         return graph
     else:
-        graph.write_png('crawled/sitemap.png')
+        graph.write_png(f'{sdir}\\sitemap.png')

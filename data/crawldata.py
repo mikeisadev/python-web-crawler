@@ -1,5 +1,6 @@
 # Data structures of crawling
 crawlData: dict = {
+    'in-action': False,
     'root': None,
     'internal': {
         'hrefs': {},

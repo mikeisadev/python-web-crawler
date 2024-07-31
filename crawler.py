@@ -1,3 +1,20 @@
+'''
+Simple Web Crawler and Analyzer in Python - Multitool
+
+Realized by Michele Mincone - 15/07/2024 - Italy
+
+Short description:
+This is a simple web crawler and analyzer (multi tool) to scan the web page you insert as URL. This web crawler can go deep scanning child URLS (and child urls of child ones).
+
+For each scanned URL you can decide to save the web page in HTML format, get CSS, JS, IMG and font files.
+
+In the future this crawler will have much more powerful tools you can calibrate through cmd commands or interface. There will be also a GUI for this crawler to have a much more simplified interface to use this tool, but this will be available in a higher version.
+
+You can calibrate this web crawler choosing multiple commands (you can find inside "/cli/commands.py").
+
+I have to say a lot about this web crawler, but you'll find more inside readme file.
+'''
+
 from data.useragents    import USER_AGENTS, getUserAgent
 from utils.utils        import checkUrlStrict, saveHeaders, saveCrawlData
 from cli.commands       import commandInPrompt

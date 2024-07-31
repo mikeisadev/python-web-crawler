@@ -1,4 +1,3 @@
-from utils.cralwer import createCrawledDir, clearCrawledDir
 import validators
 import json
 import codecs
@@ -21,11 +20,9 @@ def saveWebPage(html: bytes, name: str = 'index.html', enc = 'utf-8') -> bool:
     '''
     Save a web page.
     '''
-    path = createCrawledDir()
+    from utils.cralwer import hostnameDir
 
-    # clearCrawledDir()
-
-    f = open(f'{path}\\{name}', mode='w', encoding='utf8')
+    f = open(f'{hostnameDir}\\{name}', mode='w', encoding='utf8')
     f.write(codecs.decode(html, encoding='utf-8', errors='backslashreplace'))
     f.close()
 
@@ -35,14 +32,14 @@ def saveCrawlData(crawlData: dict, format: str = 'json') -> bool:
     '''
     Save the crawl data from dictionary to preferred format (as json)
     '''
-    path = createCrawledDir()
+    from utils.cralwer import hostnameDir
 
     formats = ('json', 'xml', 'csv')
 
     if format not in formats:
         raise Exception(f'Invalid format! These are valid formats {' '.join(formats)}')
 
-    f = open( f'{path}\\crawldata.{format}', "w")
+    f = open( f'{hostnameDir}\\crawldata.{format}', "w")
 
     match format:
         case 'json':

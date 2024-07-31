@@ -1,14 +1,15 @@
-from data.requestheaders import getReqHeaders
-from utils.url           import getPageName
-from utils.dict          import updateTree
-from data.crawldata      import crawlData
-from bs4                 import BeautifulSoup
+from data.requestheaders    import getReqHeaders
+from utils.url              import getPageName, urlToStructure
+from utils.dict             import updateTree
+from data.crawldata         import crawlData
+from bs4                    import BeautifulSoup
 import requests, os, shutil
 
 '''
 Presave here crawling data.
 '''
 crawledDir: str         = 'crawled'
+hostnameDir: str        = None
 urlTree: dict           = {}
 internalUrlCache: tuple = []
 
@@ -16,10 +17,27 @@ def startCrawler(url: str, options: dict, cmdOptions: dict, scanningChilds: bool
     '''
     The function to start crawling a web page
     '''
+    global hostnameDir
     from utils.utils import saveWebPage
 
+    # Clear the crawled folder at first start.
+    if not crawlData['in-action']:
+        if not crawledDirExists():
+            createCrawledDir()
+
+        hostnameDir = createHostNameDir(url)
+
+        clearCrawledDir()
+        
+
+    # Set the status of the crawler
+    if not crawlData['in-action']:
+        crawlData['in-action'] = True
+
+    # Set up root url
     if not crawlData['root']: crawlData['root'] = url
 
+    # Get request headers.
     headers = getReqHeaders({
         'user-agent': options.get('user-agent')
     })
@@ -69,6 +87,7 @@ def startCrawler(url: str, options: dict, cmdOptions: dict, scanningChilds: bool
         else:
             crawlData['external'].append(href)
 
+    # Update URL tree using dict traverse algorithm.
     updateTree(crawlData['internal']['hrefs'], url, urlTree[url])
 
     # Images.
@@ -126,10 +145,11 @@ def createCrawledDir() -> str:
 
 def clearCrawledDir() -> bool:
     '''
-    Clean the crawled dir
+    Clean the crawled dir for the current working hostname dir.
     '''
-    for file in os.listdir(crawledDir) :
-        path: str = os.path.join(crawledDir, file)
+    print(hostnameDir)
+    for file in os.listdir( hostnameDir ) :
+        path: str = os.path.join(hostnameDir, file)
 
         try:
             if os.path.isfile(path) or os.path.islink(path):
@@ -139,4 +159,18 @@ def clearCrawledDir() -> bool:
         except Exception as e:
             print('Error occurred while deleting "%": %' % (path, e))
 
-__all__ = ['startCrawler', 'crawledDirExists', 'createCrawledDir', 'clearCrawledDir', 'crawlChildUrls']
+def createHostNameDir(url: str) -> str:
+    '''
+    Create a directory with the name of the inserted hostname
+    '''
+    struct = urlToStructure(url)
+    hostname = struct['url'][1]
+
+    path = os.path.join('crawled', hostname)
+
+    if not os.path.exists( path ):
+        os.mkdir(path)
+
+    return path
+
+__all__ = ['startCrawler', 'crawledDirExists', 'createCrawledDir', 'clearCrawledDir', 'crawlChildUrls', 'crawledDir', 'hostnameDir', 'createHostNameDir']
