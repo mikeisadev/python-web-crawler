@@ -12,6 +12,8 @@ In the future this crawler will have much more powerful tools you can calibrate 
 
 You can calibrate this web crawler choosing multiple commands (you can find inside "/cli/commands.py").
 
+In the future this code will be exectuable with a runnable Dockerfile to avoid installing each component in Python.
+
 I have to say a lot about this web crawler, but you'll find more inside readme file.
 '''
 
