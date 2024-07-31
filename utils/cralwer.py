@@ -12,7 +12,7 @@ crawledDir: str         = 'crawled'
 urlTree: dict           = {}
 internalUrlCache: tuple = []
 
-def startCrawler(url: str, options: dict, saveWebPage: bool = False, scanningChilds: bool = False)-> dict: 
+def startCrawler(url: str, options: dict, cmdOptions: dict, scanningChilds: bool = False)-> dict: 
     '''
     The function to start crawling a web page
     '''
@@ -38,12 +38,16 @@ def startCrawler(url: str, options: dict, saveWebPage: bool = False, scanningChi
 
     # CSS
     for stylesheet in all_stylesheets:
-        crawlData['internal']['styles'][url] = []
+        if url not in crawlData['internal']['styles'].keys():
+            crawlData['internal']['styles'][url] = []
+
         crawlData['internal']['styles'][url].append( stylesheet['href'] )
 
     # JS
     for script in all_scripts:
-        crawlData['internal']['scripts'][url] = []
+        if url not in crawlData['internal']['scripts'].keys():
+            crawlData['internal']['scripts'][url] = []
+
         crawlData['internal']['scripts'][url].append( script['src'] )
 
     # Hyperlinks:
@@ -57,11 +61,11 @@ def startCrawler(url: str, options: dict, saveWebPage: bool = False, scanningChi
             print(href)
 
             if (href == crawlData['root']) or (href == f'{crawlData['root']}/') or (href in internalUrlCache) or ('?' in href):
-                continue
+                if not cmdOptions['save']['duplicate-links']: continue
             
             urlTree[url][href] = '' 
 
-            internalUrlCache.append(href)
+            internalUrlCache.append(href) # Save urls in cache
         else:
             crawlData['external'].append(href)
 
@@ -69,7 +73,9 @@ def startCrawler(url: str, options: dict, saveWebPage: bool = False, scanningChi
 
     # Images.
     for image in all_images:
-        crawlData['internal']['img'][url] = []
+        if url not in crawlData['internal']['img'].keys():
+            crawlData['internal']['img'][url] = []
+
         crawlData['internal']['img'][url].append( image['src'] )
 
     # Save web page
@@ -78,7 +84,7 @@ def startCrawler(url: str, options: dict, saveWebPage: bool = False, scanningChi
     saveWebPage(
         htmlBytes,
         pageName
-    ) if saveWebPage  else None
+    ) if cmdOptions['save']['web-page'] else None
 
     print(f'{url} - {pageName}')
     
@@ -90,11 +96,11 @@ def startCrawler(url: str, options: dict, saveWebPage: bool = False, scanningChi
         }
     }
 
-def crawlChildUrls(urls: list, options: dict, saveWebPage: bool):
+def crawlChildUrls(urls: list, options: dict, cmdOptions: dict):
     '''
     Crawl sub pages.
     '''
-    for url in urls: startCrawler(url, options, saveWebPage)
+    for url in urls: startCrawler(url, options, cmdOptions)
 
 def crawledDirExists(createDirIfNot = False) -> bool:
     '''

@@ -20,6 +20,7 @@ saveSitemap: bool         = False
 userAgent: bool           = USER_AGENTS['moz']['moz5-mac'] # Set a default user agent
 customUserAgent: bool     = False
 saveTheHeaders: bool|str  = False
+saveDupLinks              = False
 
 # Getting data (if -> prompt, else -> prompt line)
 if (len(args) == 1):
@@ -47,6 +48,9 @@ if (len(args) == 1):
             ).ask()
 
             print(f'Perfect! You selected {saveTheHeaders} for header saving process...')
+        
+        # Save duplicate links.
+        saveDupLinks = True if input('Do you want to save duplicate links (useful for internal linking analysis)') else False
 else:
     url             = checkUrlStrict( args[1] )
 
@@ -54,23 +58,33 @@ else:
     saveTheHeaders  = commandInPrompt(args, 'headers', True)
     saveJson        = commandInPrompt(args, 'json')
     saveSitemap     = commandInPrompt(args, 'sitemap')
+    saveDupLinks    = commandInPrompt(args, 'duplicate-links')
+
+print(saveDupLinks, saveTheHeaders)
     
 # Start the crawl process
 requestOptions: dict = {
     'user-agent': userAgent
 }
 
+cmdOptions: dict = {
+    'save': {
+        'web-page'          : save,
+        'duplicate-links'   : saveDupLinks
+    }
+}
+
 request = startCrawler(
     url             = url,
     options         = requestOptions,
-    saveWebPage     = True
+    cmdOptions      = cmdOptions
 )
 
 # Crawl child URLs
 crawlChildUrls(
-    list(crawlData['internal']['hrefs'][url].keys()),
-    requestOptions,
-    saveWebPage= True
+    urls            = list(crawlData['internal']['hrefs'][url].keys()),
+    options         = requestOptions,
+    cmdOptions      = cmdOptions
 )
 
 # Save headers.

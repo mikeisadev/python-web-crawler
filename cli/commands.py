@@ -9,7 +9,8 @@ import re
     - json
     - user-agent
     - headers
-
+    - duplicate-links
+    
     Commands I want to build:
     - save-images
     - save-css
@@ -47,6 +48,11 @@ COMMANDS_RULES = {
         'arg'           : False,
         'arg-required'  : False,
         'cmd'           : ('--all-headers', '--res-headers', '--req-headers')
+    },
+    'duplicate-links': {
+        'arg'           : False,
+        'arg-required'  : False,
+        'cmd'           : ('-sdl', '--save-dup-links')
     }
 }
 
@@ -72,20 +78,20 @@ def commandInPrompt(allArgs: str|tuple, commandType: str, returnCmd: bool = Fals
         # Check arg
         if arg in commands and not returnCmd:
             res = True
-            break
-        elif returnCmd:
+        elif arg in commands and returnCmd:
             res = arg
         else:
             res = False
 
+        if res: break
+
         # Check arg parameter
         if commandRules['arg'] and commandRules['arg-required'] and len( arg.split('=') ) != 2:
             raise Exception(f'Missing parameter for the command {arg}')
-
-    # print(arg)
     
+    print(res)
     return res
 
-# print(commandInPrompt('py crawler.py https://michelemincone.com -s -ua=moz5-lf5', 'user-agent'))
+commandInPrompt('py crawler.py https://michelemincone.com -s -sm --json -ua=opera-38 --all-headers -sdl', 'headers', True)
 
 __all__ = ['COMMAND_RULES', 'commandInPrompt']

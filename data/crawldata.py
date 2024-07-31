@@ -2,7 +2,6 @@
 crawlData: dict = {
     'root': None,
     'internal': {
-        'sitemap': [],
         'hrefs': {},
         'img': {},
         'scripts': {},
@@ -10,9 +9,5 @@ crawlData: dict = {
     },
     'external': []
 }
-
-
-
-
 
 __all__ = ['crawlData']
