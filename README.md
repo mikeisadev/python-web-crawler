@@ -87,7 +87,7 @@ The placeholder `[...parameters]` could be one of the following strings in the t
 | `--user-agent`, `-ua`  | With this command you can set up an user agent. | An user agent to set up. You can find many user agents inside the project folder `pycrawler/data/useragents.py`. You can choose between: moz5-winnt-10, moz5-winnt-61, moz5-mac, opera-38, opera-980, chrome-51, edge-91, safari-604 or any other user agent inside `pycrawler/data/useragents.py` file |
 | `--all-headers`, `--res-headers`, `--req-headers`  | With this command you can decide which headers you want to save into the JSON structured data file. | No argument required. |
 | `--save-dup-links`, `-sdl` | With this command you can decide if you want to save duplicate links found during the crawling process | No argument required. | 
-| `--depth`, `--crawl-depth`, `-cd`  | | The argument is an integer that indicates the depth where the crawler must go through. If the crawl depth is over scale the program will raise an exception. In other words, if the inserted crawl depth is more than the real scanned depth on the site you'll get an error. |
+| `--depth`, `--crawl-depth`, `-cd`  | Setting a number for this parameter, you can decide  the depth where the crawler must go through. If the crawl depth is over scale the program will raise an exception. In other words, if the inserted crawl depth is more than the real scanned depth on the site you'll get an error. | The argument is an `int` (integer)|
 
 # Folder structure
 
