@@ -16,6 +16,16 @@ def checkUrlStrict(url) -> str:
 
     return url
 
+def checkIfInputIsType(i, type, retryText)-> any:
+    try:
+        match type:
+            case 'int': int(i)
+            case 'str': str(i)
+    except:
+        checkIfInputIsType( input(retryText), type, retryText )
+    
+    return i
+
 def saveWebPage(html: bytes, name: str = 'index.html', enc = 'utf-8') -> bool:
     '''
     Save a web page.

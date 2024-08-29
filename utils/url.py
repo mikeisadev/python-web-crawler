@@ -8,6 +8,12 @@ regex: dict = {
     'port'    : r'([:][0-9]+)'
 }
 
+# List of file extensions of web files
+webFileExt: list = ['css', 'js', 'jpg', 'pdf', 'png', 'woff', 'ttf', 'woff2', 'svg', 'xml', 'json', 'cjs', 'mjs', 'ts', 'mp3', 'mp4', 'jpeg', 'webp']
+
+# List of file extensions of WEB PAGEs generators
+webPageFileExt: list = ['html', 'php', 'aspx']
+
 def isUrlHttps(url: str) -> bool:
     '''
     Check if the given URL is with the HTTPS protocol or not
@@ -56,7 +62,7 @@ def urlToStructure(url: str) -> dict:
         urlList['port'] = 80
 
     for _str in url.split('/'):
-        urlList['url'].append(_str) if len(_str) > 0 else None
+        urlList['url'].append(_str)
 
     # Check for port number inside the URL string.
     port = re.search(regex['port'], urlList['url'][1])
@@ -84,7 +90,14 @@ def urlToStructure(url: str) -> dict:
 
             urlList['query'][argsList[0]] = argsList[1]
 
+    # Clean blank URL fragments
+    urlList['url'] = list( filter(len, urlList['url']) )
+
     return urlList
+
+def isUrlPure(url: str)-> bool:
+    '''Function to be defined!'''
+    return True
 
 def isIndexUrl(url: str) -> bool:
     '''

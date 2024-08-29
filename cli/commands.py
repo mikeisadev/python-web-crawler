@@ -1,4 +1,5 @@
 import re
+import validators
 
 '''
     List of all types of commands and how them should be represented.
@@ -10,53 +11,66 @@ import re
     - user-agent
     - headers
     - duplicate-links
+    - crawl-depth
     
     Commands I want to build:
     - save-images
     - save-css
     - save-js
     - save-all
-    - crawl-depth
     - save-cookies
     - use-web-browser (instead of using the direct HTTP GET request)
     - scan-robots-txt
     - get-json-schemas
     - get-pixels
 '''
-COMMANDS_RULES = {
+
+COMMANDS_RULES: dict[str, dict[str, any]] = {
     'save': {
         'arg'           : False,
         'arg-required'  : False,
+        'arg-type'      : None,
         'cmd'           : ('-s', '--save')
     },
     'sitemap': {
         'arg'           : False,
         'arg-required'  : False,
+        'arg-type'      : None,
         'cmd'           : ('-sm', '--sitemap')
     },
     'json': {
         'arg'           : False,
         'arg-required'  : False,
-        'cmd'           : ('--json')
+        'arg-type'      : None,
+        'cmd'           : ('--json', '-js')
     },
     'user-agent': {
         'arg'           : True,
         'arg-required'  : False,
+        'arg-type'      : str,
         'cmd'           : ('-ua', '--user-agent')
     },
     'headers': {
         'arg'           : False,
         'arg-required'  : False,
+        'arg-type'      : None,
         'cmd'           : ('--all-headers', '--res-headers', '--req-headers')
     },
     'duplicate-links': {
         'arg'           : False,
         'arg-required'  : False,
+        'arg-type'      : None,
         'cmd'           : ('-sdl', '--save-dup-links')
+    },
+    'crawl-depth': {
+        'arg'           : True,
+        'arg-required'  : True,
+        'arg-type'      : int,
+        'cmd'           : ('--depth', '--crawl-depth', '-cd')
     }
 }
 
-def commandInPrompt(allArgs: str|tuple, commandType: str, returnCmd: bool = False) -> bool|str:
+def commandInPrompt(allArgs: str|tuple, commandType: str, returnCmd: bool = False) -> bool|str|int:
     '''
     Use this function to check if the prompt (allArgs), given ad tuple, has the specified command type inside it.
     '''
@@ -65,32 +79,38 @@ def commandInPrompt(allArgs: str|tuple, commandType: str, returnCmd: bool = Fals
     commandRules: dict = COMMANDS_RULES[commandType]
     commands: list = commandRules['cmd']
     excludeArgs: list = ('py')
+
     res: bool = False
 
     for arg in allArgs:
         # continue loop for excluded args.
-        if arg in excludeArgs or re.match(r'[A-z-_]+[.][p][y]+', arg):
+        if arg in excludeArgs or re.match(r'[A-z-_]+[.][p][y]+', arg) or validators.url(arg):
             continue
 
-        # If has '=' the arg has parameter, so split to get only the arg
-        arg = (arg.split('='))[0] if '=' in arg else arg
+        if '=' in arg:
+            arg = arg.split('=')
 
-        # Check arg
-        if arg in commands and not returnCmd:
-            res = True
-        elif arg in commands and returnCmd:
-            res = arg
+            if arg[0] not in commands:
+                continue
+            
+            res = arg[1]
+            arg = arg[0]
         else:
-            res = False
+            if returnCmd:
+                res = arg
+            elif arg in commands:
+                res = True
+            
+        if arg not in commands:
+            continue
 
-        if res: break
+        if arg in commands and not res and commandRules['arg-requird']:
+            raise Exception(f'Missing argument for the parameter {arg}')
 
-        # Check arg parameter
-        if commandRules['arg'] and commandRules['arg-required'] and len( arg.split('=') ) != 2:
-            raise Exception(f'Missing parameter for the command {arg}')
+        break
 
     return res
 
-commandInPrompt('py crawler.py https://michelemincone.com -s -sm --json -ua=opera-38 --all-headers -sdl', 'headers', True)
+# ommandInPrompt('py crawler.py https://michelemincone.com -s -sm --json -ua=opera-38 --all-headers -sdl', 'headers', True)
 
 __all__ = ['COMMAND_RULES', 'commandInPrompt']

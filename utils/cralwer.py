@@ -1,7 +1,7 @@
 from data.requestheaders    import getReqHeaders
 from utils.url              import getPageName, urlToStructure
-from utils.dict             import updateTree
-from data.crawldata         import crawlData
+from utils.dict             import updateTree, getMissingUrlsMinMax
+from data.crawldata         import crawlData, crawledPages
 from bs4                    import BeautifulSoup
 import requests, os, shutil, socket
 
@@ -13,7 +13,7 @@ hostnameDir: str        = None
 urlTree: dict           = {}
 internalUrlCache: tuple = []
 
-def startCrawler(url: str, options: dict, cmdOptions: dict, scanningChilds: bool = False)-> dict: 
+def startCrawler(url: str, options: dict, cmdOptions: dict, firstScan: bool = False) -> dict: 
     '''
     The function to start crawling a web page
     '''
@@ -83,7 +83,7 @@ def startCrawler(url: str, options: dict, cmdOptions: dict, scanningChilds: bool
 
         if crawlData['root'] in href:
 
-            print(href)
+            # print(href)
 
             if (href == crawlData['root']) or (href == f'{crawlData['root']}/') or (href in internalUrlCache) or ('?' in href):
                 if not cmdOptions['save']['duplicate-links']: continue
@@ -96,6 +96,10 @@ def startCrawler(url: str, options: dict, cmdOptions: dict, scanningChilds: bool
 
     # Update URL tree using dict traverse algorithm.
     updateTree(crawlData['internal']['hrefs'], url, urlTree[url])
+
+    # Update the URL list to know which URLs have been crawled
+    if url not in crawledPages:
+        crawledPages.append(url)
 
     # Images.
     for image in all_images:
@@ -112,7 +116,13 @@ def startCrawler(url: str, options: dict, cmdOptions: dict, scanningChilds: bool
         pageName
     ) if cmdOptions['save']['web-page'] else None
 
-    print(f'{url} - {pageName}')
+    # Crawl depth
+    if firstScan and int(crawlData['crawl-depth']) == 0:
+        print(f'INDEX CRAWLED - DEPTH: {crawlData['crawl-depth']} - {url}')
+
+        crawlData['crawl-depth'] += 1
+    else:
+        print(f'PAGE CRAWLED - DEPTH: {crawlData['crawl-depth']} - {url}')
     
     # Return crawl data.
     return {
@@ -124,9 +134,62 @@ def startCrawler(url: str, options: dict, cmdOptions: dict, scanningChilds: bool
 
 def crawlChildUrls(urls: list, options: dict, cmdOptions: dict):
     '''
-    Crawl sub pages.
+    Crawl sub pages got from first scan.
     '''
-    for url in urls: startCrawler(url, options, cmdOptions)
+    # Init
+    missingUrlsDepth: dict = {}
+
+    # Crawl first scan child URLs
+    for url in urls: 
+        startCrawler(url, options, cmdOptions, False)
+
+    # Increase crawl depth by one
+    crawlData['crawl-depth'] += 1
+
+    # Log crawled pages
+    # print(json.dumps( crawledPages, indent=True ) )
+
+    # Log missing URLs
+    # print( json.dumps( 
+    #     getMissingUrlsMinMax(
+    #         crawlData['internal']['hrefs'], 
+    #         crawledPages, 
+    #         0
+    #     ), 
+    #     indent=True 
+    # ) )
+
+    # Log crawl depth
+    # print(crawlData['crawl-depth'])
+
+    '''
+    Get missing URLs by depth excluding the already crawled ones.
+    '''
+    missingUrlsDepth = getMissingUrlsMinMax(
+        crawlData['internal']['hrefs'],
+        crawledPages,
+        0
+    )
+
+    # print(cmdOptions)
+
+    # print(json.dumps( missingUrlsDepth, indent=True ))
+
+    while crawlData['crawl-depth'] <= cmdOptions['crawler']['depth']:
+        try:
+            urls = missingUrlsDepth[ crawlData['crawl-depth'] ]
+
+            # print(json.dumps( urls, indent=True ))
+
+            for url in urls:
+                startCrawler(url, options, cmdOptions, False)
+
+            crawlData['crawl-depth'] += 1
+
+            # print(json.dumps(crawlData['crawl-depth']))
+        except:
+            print(f'Invalid crawl depth! Cannot go depeer than {crawlData['crawl-depth']} levels')
+            break
 
 def crawledDirExists(createDirIfNot = False) -> bool:
     '''

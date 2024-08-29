@@ -22,7 +22,7 @@ from utils.utils        import checkUrlStrict, saveHeaders, saveCrawlData
 from cli.commands       import commandInPrompt
 from cli.prompts        import prompts
 from utils.cralwer      import startCrawler, crawlChildUrls
-from data.crawldata     import crawlData
+from data.crawldata     import crawlData, crawledPages
 from utils.mindmap      import generateSitemapMindMap
 import sys
 import questionary
@@ -34,30 +34,31 @@ url: str                  = ''
 args: list                = sys.argv
 askAll: bool              = False
 save: bool                = False
-saveJson: bool            = False
+saveJson: bool            = True
 saveSitemap: bool         = False
 userAgent: bool           = USER_AGENTS['moz']['moz5-mac'] # Set a default user agent
 customUserAgent: bool     = False
 saveTheHeaders: bool|str  = False
 saveDupLinks              = False
+_crawlDepth: bool|int     = False
 
 # Getting data (if -> prompt, else -> prompt line)
 if (len(args) == 1):
     url = checkUrlStrict( input('Type an URL to crawl: ') ) # Get and validate URL
 
-    askAll = True if input('Ask all questions to configure the crawl options: ') == 'yes' else False
+    askAll = True if input('Ask all questions to configure the crawl options (yes/no): ') == 'yes' else False
 
     if askAll:
-        save            = True if input('Do you want to save this page: ') == 'yes' else False
-        saveJson        = True if input('Do you want to save crawl data as JSON: ') == 'yes' else False
-        saveSitemap     = True if input('Do you want to get the sitemap of the website: ') == 'yes' else False
-        customUserAgent = True if input('Do you want to set a custom User Agent? ') == 'yes' else False
+        save            = True if input('Do you want to save this page (yes/no): ') == 'yes' else False
+        saveJson        = True if input('Do you want to save crawl data as JSON (yes/no): ') == 'yes' else False
+        saveSitemap     = True if input('Do you want to get the sitemap of the website (yes/no): ') == 'yes' else False
+        customUserAgent = True if input('Do you want to set a custom User Agent? (yes/no) ') == 'yes' else False
 
         # Custom user agent selection process
         if customUserAgent:
-            userAgent = getUserAgent( input('Insert the model of the user agent you want: ') )
+            userAgent = getUserAgent( input('Insert the model of the user agent you want (opera-38/opera-980): ') )
 
-        saveTheHeaders = True if input('Do you want to save headers? ') == 'yes' else False
+        saveTheHeaders = True if input('Do you want to save headers? (yes/no) ') == 'yes' else False
 
         # Saving headers process
         if saveTheHeaders:
@@ -69,16 +70,23 @@ if (len(args) == 1):
             print(f'Perfect! You selected {saveTheHeaders} for header saving process...')
         
         # Save duplicate links.
-        saveDupLinks = True if input('Do you want to save duplicate links (useful for internal linking analysis)') else False
+        saveDupLinks = True if input('Do you want to save duplicate links (useful for internal linking analysis)? (yes/no)') else False
+
+        # Get the crawl depth
+        if 'yes' == input('Do you want to set a crawl depth? (yes/no) '):
+            _crawlDepth = int(input('Set a crawl depth inserting a number (insert a number): '))
+
 else:
     url             = checkUrlStrict( args[1] )
 
     save            = commandInPrompt(args, 'save')
+    userAgent       = getUserAgent( commandInPrompt(args, 'user-agent') )
     saveTheHeaders  = commandInPrompt(args, 'headers', True)
     saveJson        = commandInPrompt(args, 'json')
     saveSitemap     = commandInPrompt(args, 'sitemap')
     saveDupLinks    = commandInPrompt(args, 'duplicate-links')
-    
+    _crawlDepth     = int( commandInPrompt(args, 'crawl-depth') )
+
 # Start the crawl process
 requestOptions: dict = {
     'user-agent': userAgent
@@ -88,13 +96,17 @@ cmdOptions: dict = {
     'save': {
         'web-page'          : save,
         'duplicate-links'   : saveDupLinks
+    },
+    'crawler': {
+        'depth': _crawlDepth
     }
 }
 
 request = startCrawler(
     url             = url,
     options         = requestOptions,
-    cmdOptions      = cmdOptions
+    cmdOptions      = cmdOptions,
+    firstScan       = True
 )
 
 # Crawl child URLs
@@ -106,11 +118,15 @@ crawlChildUrls(
 
 # Save headers.
 crawlData['headers'] = saveHeaders(
-        saveTheHeaders,
-        request['headers']['request'],
-        request['headers']['response']
+    saveTheHeaders,
+    request['headers']['request'],
+    request['headers']['response']
 )                                                       if saveTheHeaders   else None
 saveCrawlData(crawlData)                                if saveJson         else None
 generateSitemapMindMap(crawlData['internal']['hrefs'])  if saveSitemap      else None
 
-print('Web page crawled successfully!')
+print(
+    f'Web page crawled successfully!' 
+    if len(crawledPages) < 2 else 
+    f'Website crawled successfully (total crawl depth {crawlData['crawl-depth']})'
+)
